@@ -1,0 +1,12 @@
+services:
+  bot:
+    build: .
+    env_file: .env
+    volumes:
+      - ./claude-home:/claude-home
+      # - /path/to/project:/workspace:ro
+    # Bubblewrap needs both to sandbox Bash: seccomp=unconfined lets it create user namespaces,
+    # and systempaths=unconfined removes the masks on /proc that stop it from mounting a fresh /proc.
+    security_opt:
+      - seccomp=unconfined
+      - systempaths=unconfined

@@ -1,0 +1,16 @@
+{
+  "disableClaudeAiConnectors": true,
+  "sandbox": {
+    "enabled": true,
+    "failIfUnavailable": true,
+    "allowUnsandboxedCommands": false,
+    "credentials": {
+      "files": [
+        {
+          "path": "/claude-home/.credentials.json",
+          "mode": "deny"
+        }
+      ]
+    }
+  }
+}
