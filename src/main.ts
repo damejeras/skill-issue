@@ -1,7 +1,9 @@
+import { mkdir, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import { App, type webApi } from "@slack/bolt";
 import { hasSession, send, sessionIdFor, type Content, type Listener } from "./session.ts";
 
-type SlackFile = { name: string | null; mimetype: string; size: number; url_private?: string };
+type SlackFile = { id: string; name: string | null; size: number; url_private?: string };
 
 type Incoming = {
   team: string;
@@ -13,11 +15,10 @@ type Incoming = {
   files: SlackFile[];
 };
 
-const IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp"] as const;
-type ImageType = (typeof IMAGE_TYPES)[number];
-const isImage = (mimetype: string): mimetype is ImageType => IMAGE_TYPES.some((type) => type === mimetype);
-const MAX_IMAGES = 5;
-const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+// Uploads live in the config folder so that a resumed session still finds them after a restart.
+const UPLOADS_DIR = join(process.env.CLAUDE_CONFIG_DIR ?? "/claude-home", "uploads");
+const MAX_FILES = 10;
+const MAX_FILE_BYTES = 20 * 1024 * 1024;
 // The markdown_text limit of chat.postMessage.
 const MAX_REPLY_CHARS = 12_000;
 // agents.sessions.setStatus drops "processing" after one hour.
@@ -88,26 +89,30 @@ const listenerFor = (client: webApi.WebClient, channel: string, threadTs: string
   };
 };
 
-const attach = async (files: SlackFile[]) => {
-  const images: Content = [];
+const attach = async (files: SlackFile[], sessionId: string) => {
+  const saved: string[] = [];
   const skipped: string[] = [];
+  const dir = join(UPLOADS_DIR, sessionId);
   for (const file of files) {
     const name = file.name ?? "unnamed file";
-    if (!isImage(file.mimetype) || !file.url_private) skipped.push(`${name} (not a PNG, JPEG, GIF or WebP image)`);
-    else if (images.length >= MAX_IMAGES) skipped.push(`${name} (more than ${MAX_IMAGES} images)`);
-    else if (file.size > MAX_IMAGE_BYTES) skipped.push(`${name} (larger than 5 MB)`);
+    if (!file.url_private) skipped.push(`${name} (no download link)`);
+    else if (saved.length >= MAX_FILES) skipped.push(`${name} (more than ${MAX_FILES} files)`);
+    else if (file.size > MAX_FILE_BYTES) skipped.push(`${name} (larger than 20 MB)`);
     else {
       const response = await fetch(file.url_private, { headers: { Authorization: `Bearer ${botToken}` } });
       // Slack answers a download it refuses with an HTML login page and status 200.
       const bytes = Buffer.from(await response.arrayBuffer());
-      if (!response.ok || !response.headers.get("content-type")?.startsWith("image/") || bytes.length > MAX_IMAGE_BYTES) {
+      if (!response.ok || bytes.length !== file.size) {
         skipped.push(`${name} (download failed)`);
         continue;
       }
-      images.push({ type: "image", source: { type: "base64", media_type: file.mimetype, data: bytes.toString("base64") } });
+      const path = join(dir, `${file.id}-${name.replaceAll("/", "_")}`);
+      await mkdir(dir, { recursive: true });
+      await writeFile(path, bytes);
+      saved.push(path);
     }
   }
-  return { images, skipped };
+  return { saved, skipped };
 };
 
 // Slack sends one mention as both app_mention and message, and redelivers events it thinks were lost.
@@ -120,15 +125,19 @@ const engage = async (client: webApi.WebClient, message: Incoming) => {
   seen.add(key);
   setTimeout(() => seen.delete(key), SEEN_MS);
 
-  const [{ user }, { images, skipped }] = await Promise.all([
+  const sessionId = sessionIdFor(message.team, message.channel, message.threadTs);
+  const [{ user }, { saved, skipped }] = await Promise.all([
     client.users.info({ user: message.user }),
-    attach(message.files),
+    attach(message.files, sessionId),
   ]);
   const name = user?.real_name || user?.name || message.user;
-  const note = skipped.length > 0 ? `\n[Files not attached: ${skipped.join(", ")}]` : "";
-  const content: Content = [{ type: "text", text: `<@${message.user}> (${name}): ${message.text}${note}` }, ...images];
+  const notes = [
+    ...(saved.length > 0 ? [`[Files attached, read them with the Read tool: ${saved.join(", ")}]`] : []),
+    ...(skipped.length > 0 ? [`[Files not attached: ${skipped.join(", ")}]`] : []),
+  ];
+  const content: Content = [{ type: "text", text: [`<@${message.user}> (${name}): ${message.text}`, ...notes].join("\n") }];
   send(
-    sessionIdFor(message.team, message.channel, message.threadTs),
+    sessionId,
     content,
     listenerFor(client, message.channel, message.threadTs),
   );
