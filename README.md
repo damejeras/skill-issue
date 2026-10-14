@@ -1,4 +1,4 @@
-# containerclaude
+# skill-issue
 
 A container that runs a Claude Code session for each Slack thread.
 The app moves messages between Slack and Claude, and nothing more.
