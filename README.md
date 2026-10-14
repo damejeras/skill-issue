@@ -6,25 +6,27 @@ The files in `/claude-home` set what Claude can do: `settings.json`, `CLAUDE.md`
 
 ## Run
 
-1. Create a Slack app from `slack-manifest.yaml` at https://api.slack.com/apps ("From a manifest").
+1. Create a Slack app from [`slack-manifest.yaml`](slack-manifest.yaml) at https://api.slack.com/apps ("From a manifest").
 2. Install the app to the workspace.
 3. Under "Basic Information", make an app-level token with the `connections:write` scope.
-4. Copy `.env.example` to `.env` and fill in the bot token, the app-level token and an Anthropic API key:
+4. Download `compose.yaml` into a new folder:
 
    ```sh
-   cp .env.example .env
+   mkdir skill-issue && cd skill-issue
+   curl -fsSLO https://raw.githubusercontent.com/damejeras/skill-issue/main/compose.yaml
    ```
 
-5. Start the bot:
+5. In `compose.yaml`, fill in the bot token, the app-level token and an Anthropic API key.
+6. Start the bot:
 
    ```sh
    docker compose up -d
    ```
 
    This pulls `ghcr.io/damejeras/skill-issue` for `linux/amd64` or `linux/arm64`.
-   To build the image from this source instead, add `--build`.
+   To update, run `docker compose pull && docker compose up -d`.
 
-6. Invite the bot to a channel and mention it.
+7. Invite the bot to a channel and mention it.
 
 To give Claude a project, mount it at `/workspace` in `compose.yaml`.
 Sessions and uploads are kept in the `claude-home` Docker volume.

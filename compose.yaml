@@ -1,8 +1,13 @@
 services:
   bot:
     image: ghcr.io/damejeras/skill-issue:latest
-    build: .
-    env_file: .env
+    environment:
+      # Bot User OAuth Token, from "OAuth & Permissions" after you install the app.
+      SLACK_BOT_TOKEN: xoxb-
+      # App-level token with the connections:write scope, from "Basic Information".
+      SLACK_APP_TOKEN: xapp-
+      # From https://platform.claude.com/settings/keys
+      ANTHROPIC_API_KEY: sk-ant-
     volumes:
       - claude-home:/claude-home
       # To give Claude a project, mount it at /workspace:
