@@ -2,3 +2,5 @@ node_modules/
 claude-home/
 workspace/
 compose.override.yaml
+skill-issue/
+__pycache__/

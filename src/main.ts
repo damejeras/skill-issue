@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, writeFile, access } from "node:fs/promises";
 import { join } from "node:path";
 import { App, type webApi } from "@slack/bolt";
 import { hasSession, send, sessionIdFor, type Content, type Listener } from "./session.ts";
@@ -17,6 +17,18 @@ type Incoming = {
 
 // Uploads live in the config folder so that a resumed session still finds them after a restart.
 const UPLOADS_DIR = join(process.env.CLAUDE_CONFIG_DIR ?? "/claude-home", "uploads");
+// An unfinished wizard can contain Slack tokens; do not start sessions until it is cleaned up.
+for (const name of [".skill-issue-setup.json", ".skill-issue-setup.json.tmp"]) {
+  try {
+    await access(join(process.env.CLAUDE_CONFIG_DIR ?? "/claude-home", name));
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") continue;
+    throw error;
+  }
+  console.error("Finish the setup wizard before starting the bot; its saved state still contains credentials.");
+  process.exit(1);
+}
+
 const MAX_FILES = 10;
 const MAX_FILE_BYTES = 20 * 1024 * 1024;
 // The markdown_text limit of chat.postMessage.
