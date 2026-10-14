@@ -18,8 +18,11 @@ The files in `/claude-home` set what Claude can do: `settings.json`, `CLAUDE.md`
 5. Start the bot:
 
    ```sh
-   docker compose up -d --build
+   docker compose up -d
    ```
+
+   This pulls `ghcr.io/damejeras/skill-issue` for `linux/amd64` or `linux/arm64`.
+   To build the image from this source instead, add `--build`.
 
 6. Invite the bot to a channel and mention it.
 

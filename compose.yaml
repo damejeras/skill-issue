@@ -1,5 +1,6 @@
 services:
   bot:
+    image: ghcr.io/damejeras/skill-issue:latest
     build: .
     env_file: .env
     volumes:
