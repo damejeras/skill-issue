@@ -1,6 +1,7 @@
 services:
   bot:
     image: ghcr.io/damejeras/skill-issue:latest
+    restart: unless-stopped
     environment:
       # Bot User OAuth Token, from "OAuth & Permissions" after you install the app.
       SLACK_BOT_TOKEN: xoxb-
