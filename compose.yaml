@@ -3,10 +3,14 @@ services:
     build: .
     env_file: .env
     volumes:
-      - ./claude-home:/claude-home
-      - ./workspace:/workspace:ro
+      - claude-home:/claude-home
+      # To give Claude a project, mount it at /workspace:
+      # - /path/to/project:/workspace:ro
     # Bubblewrap needs both to sandbox Bash: seccomp=unconfined lets it create user namespaces,
     # and systempaths=unconfined removes the masks on /proc that stop it from mounting a fresh /proc.
     security_opt:
       - seccomp=unconfined
       - systempaths=unconfined
+
+volumes:
+  claude-home:

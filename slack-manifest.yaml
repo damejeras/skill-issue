@@ -1,13 +1,13 @@
 _metadata:
   major_version: 2
 display_information:
-  name: Moss
+  name: Skill Issue
 features:
   bot_user:
-    display_name: Moss
+    display_name: skill-issue
     always_online: true
   agent_view:
-    agent_description: Agent Moss, a helper
+    agent_description: Mention it in a channel to start a thread with it.
 oauth_config:
   scopes:
     bot:

@@ -10,6 +10,12 @@
           "path": "/claude-home/.credentials.json",
           "mode": "deny"
         }
+      ],
+      "envVars": [
+        {
+          "name": "ANTHROPIC_API_KEY",
+          "mode": "deny"
+        }
       ]
     }
   }
