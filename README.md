@@ -16,8 +16,15 @@ The files in `/claude-home` set what Claude can do: `settings.json`, `CLAUDE.md`
    curl -fsSLO https://raw.githubusercontent.com/damejeras/skill-issue/main/compose.yaml
    ```
 
-5. In `compose.yaml`, fill in the bot token, the app-level token and an Anthropic API key.
-6. Start the bot:
+5. In `compose.yaml`, fill in the bot token and the app-level token.
+   To bill an API key, set `ANTHROPIC_API_KEY` too, and skip the next step.
+6. To use a Claude subscription, sign in. The login is kept in the `claude-home` volume:
+
+   ```sh
+   docker compose run --rm bot claude auth login
+   ```
+
+7. Start the bot:
 
    ```sh
    docker compose up -d
@@ -26,7 +33,7 @@ The files in `/claude-home` set what Claude can do: `settings.json`, `CLAUDE.md`
    This pulls `ghcr.io/damejeras/skill-issue` for `linux/amd64` or `linux/arm64`.
    To update, run `docker compose pull && docker compose up -d`.
 
-7. Invite the bot to a channel and mention it.
+8. Invite the bot to a channel and mention it.
 
 To give Claude a project, mount it at `/workspace` in `compose.yaml`.
 Sessions and uploads are kept in the `claude-home` Docker volume.
@@ -34,7 +41,7 @@ To edit the files in `/claude-home` from the host, mount a folder there instead 
 
 ## Cost
 
-Each Slack turn is billed to the Anthropic API key.
+Each Slack turn is billed to the Claude subscription or to the Anthropic API key.
 
 ## Security
 

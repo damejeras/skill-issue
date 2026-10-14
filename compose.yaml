@@ -7,8 +7,9 @@ services:
       SLACK_BOT_TOKEN: xoxb-
       # App-level token with the connections:write scope, from "Basic Information".
       SLACK_APP_TOKEN: xapp-
+      # To bill an API key instead of a Claude subscription, set it here.
       # From https://platform.claude.com/settings/keys
-      ANTHROPIC_API_KEY: sk-ant-
+      # ANTHROPIC_API_KEY: sk-ant-
     volumes:
       - claude-home:/claude-home
       # To give Claude a project, mount it at /workspace:
