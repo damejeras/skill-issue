@@ -3,6 +3,9 @@ import { join } from "node:path";
 import { App, type webApi } from "@slack/bolt";
 import { hasSession, send, sessionIdFor, type Content, type Listener } from "./session.ts";
 
+// Node 24 names its main thread MainThread, and top and ps show that name for the process.
+process.title = "skill-issue";
+
 type SlackFile = { id: string; name: string | null; size: number; url_private?: string };
 
 type Incoming = {
